@@ -8,7 +8,7 @@ import asyncio
 intents = discord.Intents.default()
 intents.message_content = True
 intents.guilds = True
-intents.members = True
+# intents.members = True  # Commented out - requires privileged intent
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
