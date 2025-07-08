@@ -2,7 +2,7 @@
 import discord
 from discord.ext import commands
 import os
-from openai import OpenAI
+from groq import Groq
 
 # Bot configuration
 intents = discord.Intents.default()
@@ -12,8 +12,8 @@ intents.guilds = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-# Initialize OpenAI client
-openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+# Initialize Groq client
+groq_client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
 @bot.event
 async def on_ready():
@@ -42,12 +42,12 @@ async def on_message(message):
     await bot.process_commands(message)
 
 async def handle_ai_conversation(message, user_input):
-    """Handle AI conversation using OpenAI"""
+    """Handle AI conversation using Groq"""
     try:
         # Show typing indicator
         async with message.channel.typing():
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
                 messages=[
                     {
                         "role": "system", 
@@ -73,7 +73,7 @@ async def handle_ai_conversation(message, user_input):
                 await message.channel.send(ai_response)
                 
     except Exception as e:
-        print(f"OpenAI API Error: {e}")
+        print(f"Groq API Error: {e}")
         await message.channel.send("Sorry, I'm having trouble thinking right now. Please try again later!")
 
 # Moderation Commands
@@ -250,8 +250,8 @@ async def ask_ai(ctx, *, question):
     """Ask the AI a question"""
     try:
         async with ctx.typing():
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
                 messages=[
                     {
                         "role": "system", 
@@ -278,7 +278,7 @@ async def ask_ai(ctx, *, question):
             await ctx.send(embed=embed)
             
     except Exception as e:
-        print(f"OpenAI API Error: {e}")
+        print(f"Groq API Error: {e}")
         await ctx.send("❌ Sorry, I couldn't process your question right now.")
 
 @bot.command(name='explain')
@@ -286,8 +286,8 @@ async def explain_concept(ctx, *, concept):
     """Get an explanation of a concept"""
     try:
         async with ctx.typing():
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
                 messages=[
                     {
                         "role": "system", 
@@ -314,7 +314,7 @@ async def explain_concept(ctx, *, concept):
             await ctx.send(embed=embed)
             
     except Exception as e:
-        print(f"OpenAI API Error: {e}")
+        print(f"Groq API Error: {e}")
         await ctx.send("❌ Sorry, I couldn't explain that right now.")
 
 @bot.command(name='summarize')
@@ -322,8 +322,8 @@ async def summarize_text(ctx, *, text):
     """Summarize a long text"""
     try:
         async with ctx.typing():
-            response = openai_client.chat.completions.create(
-                model="gpt-3.5-turbo",
+            response = groq_client.chat.completions.create(
+                model="llama-3.1-70b-versatile",
                 messages=[
                     {
                         "role": "system", 
@@ -350,7 +350,7 @@ async def summarize_text(ctx, *, text):
             await ctx.send(embed=embed)
             
     except Exception as e:
-        print(f"OpenAI API Error: {e}")
+        print(f"Groq API Error: {e}")
         await ctx.send("❌ Sorry, I couldn't summarize that right now.")
 
 # Fun Commands
@@ -382,15 +382,15 @@ async def on_command_error(ctx, error):
 
 # Get tokens from environment variables
 discord_token = os.getenv('DISCORD_TOKEN')
-openai_api_key = os.getenv('OPENAI_API_KEY')
+groq_api_key = os.getenv('GROQ_API_KEY')
 
 if not discord_token:
     print("❌ Please set the DISCORD_TOKEN environment variable!")
     print("You can do this in the Secrets tab of your Repl.")
-elif not openai_api_key:
-    print("❌ Please set the OPENAI_API_KEY environment variable!")
+elif not groq_api_key:
+    print("❌ Please set the GROQ_API_KEY environment variable!")
     print("You can do this in the Secrets tab of your Repl.")
-    print("Get your API key from: https://platform.openai.com/api-keys")
+    print("Get your API key from: https://console.groq.com/keys")
 else:
     print("🤖 Starting Chatty - Your AI-powered Discord bot!")
     bot.run(discord_token)
