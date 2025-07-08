@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import os
 import asyncio
+from openai import OpenAI
 
 # Bot configuration
 intents = discord.Intents.default()
@@ -11,6 +12,9 @@ intents.guilds = True
 # intents.members = True  # Commented out - requires privileged intent
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+# Initialize OpenAI client
+openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
 
 @bot.event
 async def on_ready():
@@ -22,14 +26,56 @@ async def on_message(message):
     if message.author == bot.user:
         return
     
-    # Simple message responses (add before processing commands)
-    if message.content.lower() == "hello":
+    # Check if message mentions the bot or is a DM
+    if bot.user.mentioned_in(message) or isinstance(message.channel, discord.DMChannel):
+        # Remove bot mention from message
+        content = message.content.replace(f'<@{bot.user.id}>', '').strip()
+        if content:
+            await handle_ai_conversation(message, content)
+    
+    # Simple message responses for non-AI conversations
+    elif message.content.lower() == "hello":
         await message.channel.send(f"Hello {message.author.mention}!")
     elif message.content.lower() == "how are you":
         await message.channel.send("I'm doing great! Thanks for asking!")
     
     # Process commands
     await bot.process_commands(message)
+
+async def handle_ai_conversation(message, user_input):
+    """Handle AI conversation using OpenAI"""
+    try:
+        # Show typing indicator
+        async with message.channel.typing():
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": f"You are Chatty, a helpful Discord bot assistant in the {message.guild.name if message.guild else 'DM'} server. Be friendly, concise, and helpful. Keep responses under 2000 characters to fit Discord's message limit."
+                    },
+                    {
+                        "role": "user", 
+                        "content": user_input
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Split long responses if needed (Discord has 2000 char limit)
+            if len(ai_response) > 2000:
+                chunks = [ai_response[i:i+2000] for i in range(0, len(ai_response), 2000)]
+                for chunk in chunks:
+                    await message.channel.send(chunk)
+            else:
+                await message.channel.send(ai_response)
+                
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        await message.channel.send("Sorry, I'm having trouble thinking right now. Please try again later!")
 
 # Moderation Commands
 @bot.command(name='kick')
@@ -199,6 +245,115 @@ async def remove_role(ctx, member: discord.Member, *, role_name):
     else:
         await ctx.send(f"Role {role_name} not found or member doesn't have this role.")
 
+# AI Commands
+@bot.command(name='ask')
+async def ask_ai(ctx, *, question):
+    """Ask the AI a question"""
+    try:
+        async with ctx.typing():
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are a helpful AI assistant. Provide accurate, helpful responses. Keep responses concise and under 2000 characters."
+                    },
+                    {
+                        "role": "user", 
+                        "content": question
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            answer = response.choices[0].message.content
+            
+            embed = discord.Embed(
+                title="🤖 AI Response",
+                description=answer,
+                color=discord.Color.blue()
+            )
+            embed.set_footer(text=f"Asked by {ctx.author.display_name}")
+            
+            await ctx.send(embed=embed)
+            
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        await ctx.send("❌ Sorry, I couldn't process your question right now.")
+
+@bot.command(name='explain')
+async def explain_concept(ctx, *, concept):
+    """Get an explanation of a concept"""
+    try:
+        async with ctx.typing():
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are an educational assistant. Explain concepts clearly and simply, as if teaching someone new to the topic. Use examples when helpful."
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Please explain: {concept}"
+                    }
+                ],
+                max_tokens=600,
+                temperature=0.5
+            )
+            
+            explanation = response.choices[0].message.content
+            
+            embed = discord.Embed(
+                title=f"📚 Explanation: {concept}",
+                description=explanation,
+                color=discord.Color.green()
+            )
+            embed.set_footer(text=f"Requested by {ctx.author.display_name}")
+            
+            await ctx.send(embed=embed)
+            
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        await ctx.send("❌ Sorry, I couldn't explain that right now.")
+
+@bot.command(name='summarize')
+async def summarize_text(ctx, *, text):
+    """Summarize a long text"""
+    try:
+        async with ctx.typing():
+            response = openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are a text summarization assistant. Create concise, accurate summaries that capture the main points."
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Please summarize this text: {text}"
+                    }
+                ],
+                max_tokens=300,
+                temperature=0.3
+            )
+            
+            summary = response.choices[0].message.content
+            
+            embed = discord.Embed(
+                title="📝 Summary",
+                description=summary,
+                color=discord.Color.orange()
+            )
+            embed.set_footer(text=f"Summarized for {ctx.author.display_name}")
+            
+            await ctx.send(embed=embed)
+            
+    except Exception as e:
+        print(f"OpenAI API Error: {e}")
+        await ctx.send("❌ Sorry, I couldn't summarize that right now.")
+
 # Fun Commands
 @bot.command(name='say')
 @commands.has_permissions(manage_messages=True)
@@ -226,10 +381,17 @@ async def on_command_error(ctx, error):
     else:
         await ctx.send("❌ An error occurred while processing the command.")
 
-# Get token from environment variable
-token = os.getenv('DISCORD_TOKEN')
-if token:
-    bot.run(token)
-else:
-    print("Please set the DISCORD_TOKEN environment variable!")
+# Get tokens from environment variables
+discord_token = os.getenv('DISCORD_TOKEN')
+openai_api_key = os.getenv('OPENAI_API_KEY')
+
+if not discord_token:
+    print("❌ Please set the DISCORD_TOKEN environment variable!")
     print("You can do this in the Secrets tab of your Repl.")
+elif not openai_api_key:
+    print("❌ Please set the OPENAI_API_KEY environment variable!")
+    print("You can do this in the Secrets tab of your Repl.")
+    print("Get your API key from: https://platform.openai.com/api-keys")
+else:
+    print("🤖 Starting Chatty - Your AI-powered Discord bot!")
+    bot.run(discord_token)
