@@ -2,7 +2,6 @@
 import discord
 from discord.ext import commands
 import os
-import asyncio
 from openai import OpenAI
 
 # Bot configuration
