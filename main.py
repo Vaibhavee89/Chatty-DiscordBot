@@ -22,6 +22,12 @@ async def on_message(message):
     if message.author == bot.user:
         return
     
+    # Simple message responses (add before processing commands)
+    if message.content.lower() == "hello":
+        await message.channel.send(f"Hello {message.author.mention}!")
+    elif message.content.lower() == "how are you":
+        await message.channel.send("I'm doing great! Thanks for asking!")
+    
     # Process commands
     await bot.process_commands(message)
 
