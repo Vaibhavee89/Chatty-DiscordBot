@@ -106,5 +106,5 @@ MIT License. See `LICENSE` file for more details.
 * [discord.py](https://github.com/Rapptz/discord.py)
 * Open-source inspiration from various community projects.
 
-```
+
 
