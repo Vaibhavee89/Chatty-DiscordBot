@@ -51,15 +51,24 @@ async def handle_ai_conversation(message, user_input):
                 messages=[
                     {
                         "role": "system", 
-                        "content": f"You are Chatty, a helpful Discord bot assistant in the {message.guild.name if message.guild else 'DM'} server. Be friendly, concise, and helpful. Keep responses under 2000 characters to fit Discord's message limit."
+                        "content": f"You are Chatty, an advanced AI Discord bot assistant. You can help with:\n"
+                                 f"- Answering questions on any topic (science, technology, history, etc.)\n"
+                                 f"- Providing explanations and tutorials\n"
+                                 f"- Creative writing and brainstorming\n"
+                                 f"- Math and programming help\n"
+                                 f"- General conversation and advice\n"
+                                 f"- Current events and general knowledge\n\n"
+                                 f"Be knowledgeable, helpful, and engaging. Adapt your tone to match the user's style. "
+                                 f"Keep responses under 2000 characters for Discord. If a topic requires longer explanation, "
+                                 f"offer to break it into parts or suggest using the !explain command for detailed responses."
                     },
                     {
                         "role": "user", 
                         "content": user_input
                     }
                 ],
-                max_tokens=500,
-                temperature=0.7
+                max_tokens=600,
+                temperature=0.8
             )
             
             ai_response = response.choices[0].message.content
@@ -251,19 +260,28 @@ async def ask_ai(ctx, *, question):
     try:
         async with ctx.typing():
             response = groq_client.chat.completions.create(
-                model="llama-3.1-70b-versatile",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {
                         "role": "system", 
-                        "content": "You are a helpful AI assistant. Provide accurate, helpful responses. Keep responses concise and under 2000 characters."
+                        "content": "You are an expert AI assistant capable of answering questions across all domains including:\n"
+                                 "- Science, technology, engineering, mathematics\n"
+                                 "- History, geography, culture, politics\n"
+                                 "- Literature, arts, philosophy\n"
+                                 "- Programming, software development\n"
+                                 "- Health, fitness, lifestyle advice\n"
+                                 "- Business, economics, finance\n"
+                                 "- Current events and general knowledge\n\n"
+                                 "Provide accurate, well-researched answers. If uncertain, acknowledge limitations. "
+                                 "Use examples when helpful. Keep responses under 2000 characters but comprehensive."
                     },
                     {
                         "role": "user", 
                         "content": question
                     }
                 ],
-                max_tokens=500,
-                temperature=0.7
+                max_tokens=700,
+                temperature=0.6
             )
             
             answer = response.choices[0].message.content
@@ -352,6 +370,67 @@ async def summarize_text(ctx, *, text):
     except Exception as e:
         print(f"Groq API Error: {e}")
         await ctx.send("❌ Sorry, I couldn't summarize that right now.")
+
+@bot.command(name='chat')
+async def chat_ai(ctx, *, message):
+    """Have a casual conversation with the AI"""
+    try:
+        async with ctx.typing():
+            response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are Chatty, a friendly conversational AI. Engage in natural, casual conversation. "
+                                 "Be personable, witty, and helpful. You can discuss any topic, share opinions (while noting they're AI perspectives), "
+                                 "tell jokes, provide advice, or just chat. Match the user's energy and tone."
+                    },
+                    {
+                        "role": "user", 
+                        "content": message
+                    }
+                ],
+                max_tokens=500,
+                temperature=0.9
+            )
+            
+            reply = response.choices[0].message.content
+            await ctx.send(reply)
+            
+    except Exception as e:
+        print(f"Groq API Error: {e}")
+        await ctx.send("❌ Sorry, I'm having trouble chatting right now.")
+
+@bot.command(name='help_ai')
+async def help_ai(ctx):
+    """Show all AI-related commands"""
+    embed = discord.Embed(
+        title="🤖 AI Commands",
+        description="Here are all the ways you can interact with my AI:",
+        color=discord.Color.blue()
+    )
+    embed.add_field(
+        name="💬 Natural Conversation", 
+        value="• Mention me (@Chatty) or DM me for natural conversation\n• `!chat [message]` - Casual conversation", 
+        inline=False
+    )
+    embed.add_field(
+        name="❓ Question & Answer", 
+        value="• `!ask [question]` - Ask any question\n• `!explain [concept]` - Get detailed explanations", 
+        inline=False
+    )
+    embed.add_field(
+        name="📝 Text Processing", 
+        value="• `!summarize [text]` - Summarize long text", 
+        inline=False
+    )
+    embed.add_field(
+        name="💡 Tips", 
+        value="I can help with: science, math, programming, history, current events, creative writing, advice, and much more!", 
+        inline=False
+    )
+    
+    await ctx.send(embed=embed)
 
 # Fun Commands
 @bot.command(name='say')
