@@ -18,7 +18,7 @@ A powerful and conversational Discord chatbot built using **Python** and the **G
 
 ## 📸 Screenshots
 
-> *[Include some screenshots of the bot replying in Discord]*
+![Conversation Screenshot](Chatty.png)
 
 ---
 
