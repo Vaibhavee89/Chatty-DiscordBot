@@ -58,10 +58,10 @@ python bot.py
 
 ## 🧠 Example Usage
 
-User: `@GroqBot What's the capital of Japan?`
+User: `@Chatty What's the capital of Japan?`
 Bot: `The capital of Japan is Tokyo.`
 
-User: `@GroqBot Tell me a joke!`
+User: `@Chatty Tell me a joke!`
 Bot: `Why don't scientists trust atoms? Because they make up everything!`
 
 ---
